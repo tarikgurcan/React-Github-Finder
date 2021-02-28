@@ -39,7 +39,7 @@ export class Search extends Component {
             }
           }).catch(err=>this.showAlert(err,"warning"));
       } else {
-        this.showAlert("Boş Giremessiniz", "danger");
+        this.showAlert("You cannot enter null value", "danger");
       }
       
 

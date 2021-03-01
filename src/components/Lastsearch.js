@@ -9,7 +9,7 @@ export default class Lastsearch extends Component {
               <div id="lastSearch" className="mt-5">
               <ul className="list-group" id="last-users">
               {this.props.lastsearch.map((usernames,key)=>{return(
-                <li className="list-group-item" key={key}>{usernames}</li>
+                <li className="list-group-item" key={key}>{usernames?usernames:"Null"}</li>
               )})}
               </ul>
               <hr />

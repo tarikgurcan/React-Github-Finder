@@ -1,5 +1,6 @@
 import React, { Component, Fragment } from "react";
 import Alert from "./Alert";
+import Lastsearch from "./Lastsearch";
 import { Loading } from "./Loading";
 import Navi from "./Navi";
 import Users from "./Users";
@@ -9,21 +10,30 @@ export class Search extends Component {
     super(props);
     this.searchuser = this.searchuser.bind(this);
     this.searchRepos = this.searchRepos.bind(this);
-    this.deletelinksearch=this.deletelinksearch.bind(this)
-    this.showAlert=this.showAlert.bind(this)
+    this.deletelinksearch = this.deletelinksearch.bind(this);
+    this.showAlert = this.showAlert.bind(this);
     this.url = "https://api.github.com/users/";
     this.state = {
       userdata: null,
       repos: [],
       alert: { msg: null, type: null },
-      loading: false
+      loading: false,
+      lastsearch: [],
     };
   }
+  componentDidMount() {
+    if (localStorage.getItem("lastsearch")) {
+      const newlastSearch = JSON.parse(localStorage.getItem("lastsearch"));
+      this.setState({ lastsearch: newlastSearch });
+    } else {
+      this.setState({ lastsearch: [] });
+    }
+  }
+
   searchuser(e) {
     const username = e.target.elements.input.value.trim();
-    this.setState({loading:true,
-                    userdata:null })
-    setTimeout(()=>{
+    this.setState({ loading: true, userdata: null });
+    setTimeout(() => {
       if (username) {
         fetch(this.url + username)
           .then((resolve) => resolve.json())
@@ -31,19 +41,23 @@ export class Search extends Component {
             if (data.message == "Not Found") {
               this.showAlert("User not found", "danger");
             } else {
-              this.setState({ 
+              this.setState({
+                lastsearch: [...this.state.lastsearch, data.name],
                 userdata: data,
-                loading: false
-               });
-               this.searchRepos(username);
+                loading: false,
+              });
+              this.searchRepos(username);
+              localStorage.setItem(
+                "lastsearch",
+                JSON.stringify(this.state.lastsearch)
+              );
             }
-          }).catch(err=>this.showAlert(err,"warning"));
+          })
+          .catch((err) => this.showAlert(err, "warning"));
       } else {
         this.showAlert("You cannot enter null value", "danger");
       }
-      
-
-    },1500)
+    }, 1500);
     e.target.elements.input.value = "";
     e.preventDefault();
   }
@@ -55,7 +69,7 @@ export class Search extends Component {
         type: type,
       },
     });
-    console.log(this.state.alert)
+    console.log(this.state.alert);
     setTimeout(() => {
       this.setState({
         alert: {
@@ -70,19 +84,25 @@ export class Search extends Component {
       .then((resolve) => resolve.json())
       .then((data) => {
         this.setState({ repos: data });
-      }).catch(err=>this.showAlert(err,"warning"));
-  }
-  deletelinksearch(){
-      this.setState({
-          userdata:null,
-          repos:[]
       })
+      .catch((err) => this.showAlert(err, "warning"));
   }
+  deletelinksearch() {
+    this.setState({
+      userdata: null,
+      repos: [],
+    });
+  }
+
+  deletelastsearch = () => {
+    this.setState({ lastsearch: [] });
+    localStorage.removeItem("lastsearch");
+  };
 
   render() {
     return (
       <Fragment>
-        <Navi/>
+        <Navi />
         <div className="container">
           <div className="card mb-2">
             <div className="card-header">
@@ -104,10 +124,20 @@ export class Search extends Component {
               </div>
             </form>
           </div>
-          {this.state.loading?<Loading/>:null}
+          {this.state.loading ? <Loading /> : null}
           {this.state.alert ? <Alert alert={this.state.alert} /> : null}
           {this.state.userdata ? (
-            <Users userdata={this.state.userdata} repos={this.state.repos} deletelinksearch={this.deletelinksearch} />
+            <Users
+              userdata={this.state.userdata}
+              repos={this.state.repos}
+              deletelinksearch={this.deletelinksearch}
+            />
+          ) : null}
+          {this.state.lastsearch.length > 0 ? (
+            <Lastsearch
+              lastsearch={this.state.lastsearch}
+              deletelastsearch={this.deletelastsearch}
+            />
           ) : null}
         </div>
       </Fragment>
